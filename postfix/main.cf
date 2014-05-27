@@ -18,23 +18,48 @@ append_dot_mydomain = no
 readme_directory = no
 
 # TLS parameters
-smtpd_tls_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem
-smtpd_tls_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
+#smtpd_use_tls=yes
+#smtpd_tls_session_cache_database = btree:${data_directory}/smtpd_scache
+#smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
+smtpd_tls_cert_file={key_path}
+smtpd_tls_key_file={key_path}
 smtpd_use_tls=yes
-smtpd_tls_session_cache_database = btree:${data_directory}/smtpd_scache
-smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
+smtpd_tls_auth_only = yes
+
+#Enabling SMTP for authenticated users, and handing off authentication to Dovecot
+smtpd_sasl_type = dovecot
+smtpd_sasl_path = private/auth
+smtpd_sasl_auth_enable = yes
+
+smtpd_recipient_restrictions =
+        permit_sasl_authenticated,
+        permit_mynetworks,
+        reject_unauth_destination,
+        reject_rbl_client zen.spamhaus.org,
+        reject_rbl_client bl.spamcop.net
+
+#Handing off local delivery to Dovecot's LMTP, and telling it where to store mail
+virtual_transport = lmtp:unix:private/dovecot-lmtp
+
+#Virtual domains, users, and aliases
+virtual_mailbox_domains = mysql:{mysql_virtual_domain_conf_path}
+virtual_mailbox_maps = mysql:{mysql_virtual_mailbox_conf_path}
+virtual_alias_maps = mysql:{mysql_virtual_alias_conf_path}
 
 # See /usr/share/doc/postfix/TLS_README.gz in the postfix-doc package for
 # information on enabling SSL in the smtp client.
 
 smtpd_relay_restrictions = permit_mynetworks permit_sasl_authenticated defer_unauth_destination
-myhostname = witchcraft.0xzl.me
+myhostname = {fqdn}
 alias_maps = hash:/etc/aliases
 alias_database = hash:/etc/aliases
 myorigin = /etc/mailname
-mydestination = 0xzl.com, witchcraft.0xzl.me, localhost.0xzl.me, localhost
+mydestination = localhost
+smtp_generic_maps = hash:{generic_map_conf_path}
 relayhost = 
 mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
 mailbox_size_limit = 0
 recipient_delimiter = +
 inet_interfaces = all
+
+content_filter = amavis:[127.0.0.1]:10024
