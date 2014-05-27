@@ -67,7 +67,7 @@ $MAX_EXPANSION_QUOTA = 300*1024*1024;  # bytes
 
 $final_virus_destiny      = D_DISCARD;  # (data not lost, see virus quarantine)
 $final_banned_destiny     = D_BOUNCE;   # D_REJECT when front-end MTA
-$final_spam_destiny       = D_BOUNCE;
+$final_spam_destiny       = D_PASS;
 $final_bad_header_destiny = D_PASS;     # False-positive prone (for spam)
 
 $enable_dkim_verification = 0; #disabled to prevent warning
